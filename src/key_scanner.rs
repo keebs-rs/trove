@@ -408,12 +408,6 @@ impl KeyScanner {
         for (row, row_state) in self.matrix_state.iter_mut().enumerate() {
             for col in 0..COLS {
                 if row_state.previous.column(col) || row_state.current.column(col) {
-                    // If the keypress is not a held key, add an additional small delay to ensure
-                    // any following read is an intentional hold.
-                    if !row_state.previous.column(col) && row_state.current.column(col) {
-                        small_delay(384);
-                    }
-
                     // read the key value from the key map
                     let key = COL_KEYS[col][row];
 

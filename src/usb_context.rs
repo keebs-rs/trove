@@ -30,7 +30,9 @@ impl UsbContext {
                 self.hid_class.pull_raw_output(&mut report_buf).ok();
             }
 
-            self.poll();
+            if report.modifier != 0 || report.keycodes != [0; 6] {
+                self.poll();
+            }
         }
     }
 
