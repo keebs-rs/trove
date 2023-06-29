@@ -7,7 +7,7 @@ use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, 
 use avr_device::asm;
 use usbd_hid::descriptor::KeyboardReport;
 
-use crate::{key_is_modifier, key_to_modifier, KeyMatrix, COLS, COL_KEYS, ROWS};
+use crate::{key_is_modifier, key_to_modifier, KeyMatrix, COL_KEYS, ROWS};
 
 /// Maximum number of columns of in a [RowState].
 pub const MAX_COLS: usize = 16;
@@ -260,7 +260,7 @@ impl Debounce {
         // Update state: in this case use xor to flip any bit that is true in changes.
         self.debounced ^= changes;
 
-        changes.into()
+        changes
     }
 }
 
@@ -406,10 +406,10 @@ impl KeyScanner {
         let mut keycodes = 0;
 
         for (row, row_state) in self.matrix_state.iter_mut().enumerate() {
-            for col in 0..COLS {
+            for (col, col_keys) in COL_KEYS.iter().enumerate() {
                 if row_state.previous.column(col) || row_state.current.column(col) {
                     // read the key value from the key map
-                    let key = COL_KEYS[col][row];
+                    let key = col_keys[row];
 
                     if key_is_modifier(key) {
                         reports[report_idx].modifier |= key_to_modifier(key);
