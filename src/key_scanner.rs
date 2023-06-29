@@ -2,10 +2,12 @@
 //!
 //! Types and functionality for scanning the key matrix, and debouncing key activation state.
 
+use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
+
 use avr_device::asm;
 use usbd_hid::descriptor::KeyboardReport;
 
-use crate::{key_is_modifier, key_to_modifier, KeyMatrix, COLS, COL_KEYS, ROWS};
+use crate::{key_is_modifier, key_to_modifier, KeyMatrix, COL_KEYS, ROWS};
 
 /// Maximum number of columns of in a [RowState].
 pub const MAX_COLS: usize = 16;
@@ -154,6 +156,56 @@ impl From<RowState> for u16 {
     }
 }
 
+impl BitAnd for RowState {
+    type Output = RowState;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        (self.0 & rhs.0).into()
+    }
+}
+
+impl BitAndAssign for RowState {
+    fn bitand_assign(&mut self, rhs: Self) {
+        self.0 &= rhs.0;
+    }
+}
+
+impl BitOr for RowState {
+    type Output = RowState;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        (self.0 | rhs.0).into()
+    }
+}
+
+impl BitOrAssign for RowState {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0;
+    }
+}
+
+impl BitXor for RowState {
+    type Output = RowState;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        (self.0 ^ rhs.0).into()
+    }
+}
+
+impl BitXorAssign for RowState {
+    fn bitxor_assign(&mut self, rhs: Self) {
+        self.0 ^= rhs.0;
+    }
+}
+
+impl Not for RowState {
+    type Output = RowState;
+
+    fn not(self) -> Self::Output {
+        (!self.0).into()
+    }
+}
+
 /// Debounce state for the keyscanner matrix.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Debounce {
@@ -194,21 +246,21 @@ impl Debounce {
     pub fn debounce(&mut self, sample: RowState) -> RowState {
         // Use xor to detect changes from last stable state:
         // if a key has changed, its bit will be 1, otherwise 0
-        let delta = sample.as_inner() ^ self.debounced.as_inner();
+        let delta = sample ^ self.debounced;
 
         // Increment counters and reset any unchanged bits:
         // increment bit 1 for all changed keys
-        self.db1 = RowState::from((self.db1.as_inner() ^ self.db0.as_inner()) & delta);
+        self.db1 = (self.db1 ^ self.db0) & delta;
         // increment bit 0 for all changed keys
-        self.db0 = RowState::from((!self.db0.as_inner()) & delta);
+        self.db0 = !self.db0 & delta;
 
         // Calculate returned change set: if delta is still true
         // and the counter has wrapped back to 0, the key is changed.
-        let changes = !(!delta | (self.db0.as_inner() | self.db1.as_inner()));
+        let changes = !(!delta | self.db0 | self.db1);
         // Update state: in this case use xor to flip any bit that is true in changes.
-        self.debounced = RowState::from(self.debounced.as_inner() ^ changes);
+        self.debounced ^= changes;
 
-        changes.into()
+        changes
     }
 }
 
@@ -354,16 +406,10 @@ impl KeyScanner {
         let mut keycodes = 0;
 
         for (row, row_state) in self.matrix_state.iter_mut().enumerate() {
-            for col in 0..COLS {
+            for (col, col_keys) in COL_KEYS.iter().enumerate() {
                 if row_state.previous.column(col) || row_state.current.column(col) {
-                    // If the keypress is not a held key, add an additional small delay to ensure
-                    // any following read is an intentional hold.
-                    if !row_state.previous.column(col) && row_state.current.column(col) {
-                        small_delay(384);
-                    }
-
                     // read the key value from the key map
-                    let key = COL_KEYS[col][row];
+                    let key = col_keys[row];
 
                     if key_is_modifier(key) {
                         reports[report_idx].modifier |= key_to_modifier(key);
@@ -386,14 +432,6 @@ impl KeyScanner {
         reports
     }
 
-    fn clear_matrix_state(&mut self) {
-        for row_state in self.matrix_state.iter_mut() {
-            row_state.set_previous(RowState::new());
-            row_state.set_current(RowState::new());
-            row_state.debouncer.debounced = RowState::new();
-        }
-    }
-
     /// Perform a debounced [KeyMatrix] scan, and return any [KeyboardReport]s.
     pub fn scan<const N: usize>(&mut self) -> [KeyboardReport; N] {
         let do_scan = self.do_scan;
@@ -404,12 +442,6 @@ impl KeyScanner {
             self.do_scan = false;
         }
 
-        let reports = self.matrix_scan_reports::<N>();
-
-        if do_scan {
-            self.clear_matrix_state();
-        }
-
-        reports
+        self.matrix_scan_reports::<N>()
     }
 }

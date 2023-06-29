@@ -3,6 +3,7 @@ use core::sync::atomic::{AtomicBool, Ordering};
 pub struct RawSpinLock(AtomicBool);
 
 unsafe impl lock_api::RawRwLock for RawSpinLock {
+    #[allow(clippy::declare_interior_mutable_const)]
     const INIT: RawSpinLock = RawSpinLock(AtomicBool::new(false));
 
     type GuardMarker = lock_api::GuardSend;

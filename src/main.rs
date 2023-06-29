@@ -43,8 +43,8 @@ fn main() -> ! {
         &*USB_BUS.insert(UsbBus::new(usb))
     };
 
-    let hid_class = HIDClass::new(&usb_bus, KeyboardReport::desc(), 1);
-    let usb_device = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x1209, 0x2303))
+    let hid_class = HIDClass::new(usb_bus, KeyboardReport::desc(), 1);
+    let usb_device = UsbDeviceBuilder::new(usb_bus, UsbVidPid(0x1209, 0x2303))
         .manufacturer("Keyboardio")
         .product("Trove Atreus")
         .build();
