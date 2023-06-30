@@ -1,0 +1,10 @@
+[package]
+name = "trove-internal"
+version = "0.1.0"
+authors = ["rmsyn <rmsynchls@gmail.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies.usbd-hid]
+version = "0.6"
+git = "https://github.com/twitchyliquid64/usbd-hid"

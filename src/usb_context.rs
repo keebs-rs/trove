@@ -18,6 +18,7 @@ pub struct UsbContext {
 }
 
 impl UsbContext {
+    /// Scans the key matrix for key presses.
     pub fn scan_matrix(&mut self) {
         let reports = self.key_scanner.scan::<MAX_KEYBOARD_REPORTS>();
 
@@ -36,6 +37,7 @@ impl UsbContext {
         }
     }
 
+    /// Polls the USB host with a blank HID report.
     pub fn poll(&mut self) {
         self.hid_class.push_input(&BLANK_REPORT).ok();
 
