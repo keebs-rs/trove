@@ -7,7 +7,7 @@ use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, 
 use avr_device::asm;
 use usbd_hid::descriptor::KeyboardReport;
 
-use crate::{key_is_modifier, key_to_modifier, KeyMatrix, COL_KEYS, ROWS};
+use crate::{key_matrix::KeyMatrix, layers};
 
 /// Maximum number of columns of in a [RowState].
 pub const MAX_COLS: usize = 16;
@@ -340,7 +340,7 @@ impl DebounceRowState {
 /// single key press.
 pub struct KeyScanner {
     matrix_pins: KeyMatrix,
-    matrix_state: [DebounceRowState; ROWS],
+    matrix_state: [DebounceRowState; layers::ROWS],
     do_scan: bool,
 }
 
@@ -354,7 +354,7 @@ impl KeyScanner {
     pub fn new(matrix_pins: KeyMatrix) -> Self {
         Self {
             matrix_pins,
-            matrix_state: [DebounceRowState::new(); ROWS],
+            matrix_state: [DebounceRowState::new(); layers::ROWS],
             do_scan: true,
         }
     }
@@ -392,7 +392,7 @@ impl KeyScanner {
         }
 
         if any_debounced_changes.is_active() {
-            for s in 0..ROWS {
+            for s in 0..layers::ROWS {
                 let debounced = self.matrix_state[s].debouncer.debounced();
                 self.matrix_state[s].set_current(debounced);
             }
@@ -404,15 +404,50 @@ impl KeyScanner {
         let mut reports = [BLANK_REPORT; N];
         let mut report_idx = 0;
         let mut keycodes = 0;
+        let mut fun_pressed = false;
+        let mut upper_pressed = false;
 
-        for (row, row_state) in self.matrix_state.iter_mut().enumerate() {
-            for (col, col_keys) in COL_KEYS.iter().enumerate() {
+        for (row, row_state) in self.matrix_state.iter_mut().enumerate().rev() {
+            for col in 0..layers::COLS {
                 if row_state.previous.column(col) || row_state.current.column(col) {
-                    // read the key value from the key map
-                    let key = col_keys[row];
+                    let active_layer = layers::active_layer();
 
-                    if key_is_modifier(key) {
-                        reports[report_idx].modifier |= key_to_modifier(key);
+                    // read the key value from the key map
+                    let key = layers::passthrough_key(
+                        active_layer.index(),
+                        layers::layer_index(row, col),
+                    );
+
+                    if layers::key_is_fun(key) {
+                        // function key was pressed, switch layer based on the active layer
+                        match active_layer {
+                            layers::Layer::Base => layers::set_active_layer(layers::Layer::Fun),
+                            layers::Layer::Fun => active_layer,
+                            layers::Layer::Upper => layers::set_active_layer(layers::Layer::Base),
+                        };
+
+                        fun_pressed = true;
+                    } else if layers::key_is_upper(key) {
+                        // upper key was pressed, if on a non-upper layer, switch to upper layer
+                        // otherwise, switch to the layer below the upper layer
+                        match active_layer {
+                            layers::Layer::Base | layers::Layer::Fun => {
+                                layers::set_active_layer(layers::Layer::Upper)
+                            }
+                            layers::Layer::Upper => layers::set_active_layer(layers::Layer::from(
+                                active_layer.index().saturating_sub(1),
+                            )),
+                        };
+
+                        upper_pressed = true;
+                    } else if layers::key_is_shifted(key) {
+                        reports[report_idx].modifier |= layers::key_to_modifier(layers::SHIFT);
+                        reports[report_idx].keycodes = [layers::shifted_key(key), 0, 0, 0, 0, 0];
+
+                        report_idx += 1;
+                        keycodes = 0;
+                    } else if layers::key_is_modifier(key) {
+                        reports[report_idx].modifier |= layers::key_to_modifier(key);
                     } else {
                         reports[report_idx].keycodes[keycodes] = key;
                         keycodes += 1;
@@ -420,13 +455,23 @@ impl KeyScanner {
 
                     // if the current report has the max non-modifier keys, move to the next report
                     if keycodes >= 6 {
-                        report_idx += 1;
+                        report_idx = (report_idx + 1) % N;
                         keycodes = 0;
                     }
                 }
             }
 
             row_state.previous = row_state.current;
+        }
+
+        let active_layer = layers::active_layer();
+
+        if active_layer == layers::Layer::Fun && !fun_pressed {
+            layers::set_active_layer(layers::Layer::Base);
+        }
+
+        if active_layer != layers::Layer::Upper && upper_pressed {
+            layers::set_active_layer(layers::Layer::Upper);
         }
 
         reports

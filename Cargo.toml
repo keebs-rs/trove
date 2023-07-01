@@ -36,6 +36,10 @@ git = "https://github.com/agausmann/atmega-usbd"
 version = "0.5"
 features = ["atmega32u4"]
 
+[dependencies.trove-internal]
+version = "0.1"
+path = "./trove-internal"
+
 # Configure the build for minimal size - AVRs have very little program memory
 [profile.dev]
 panic = "abort"

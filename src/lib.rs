@@ -5,7 +5,8 @@
 #[macro_use(bitfield)]
 extern crate bitfield;
 
-mod key_defs;
+pub use trove_internal::layers;
+
 mod key_matrix;
 mod key_scanner;
 mod lock;
@@ -13,7 +14,6 @@ mod setup;
 mod std_stub;
 mod usb_context;
 
-pub use key_defs::*;
 pub use key_matrix::*;
 pub use key_scanner::*;
 pub use lock::*;
