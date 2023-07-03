@@ -132,11 +132,22 @@ pub fn key_is_trans(key: u8) -> bool {
 
 /// Gets whether the key is shifted.
 pub fn key_is_shifted(key: u8) -> bool {
-    match key {
-        L_BRACE | R_BRACE | EXCL | AT | HASH | DOLLAR | MOD | CARET | AMP | STAR | L_PAREN
-        | R_PAREN | PLUS => true,
-        _ => false,
-    }
+    matches!(
+        key,
+        L_BRACE
+            | R_BRACE
+            | EXCL
+            | AT
+            | HASH
+            | DOLLAR
+            | MOD
+            | CARET
+            | AMP
+            | STAR
+            | L_PAREN
+            | R_PAREN
+            | PLUS
+    )
 }
 
 /// Gets a shifted keycode.
