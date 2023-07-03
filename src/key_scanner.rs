@@ -374,7 +374,7 @@ impl KeyScanner {
             let mut hot_pins = RowState::new();
             for (j, col) in self.matrix_pins.cols.iter().enumerate() {
                 // add a slight delay to allow for stable read of the input pin
-                small_delay(768);
+                small_delay(512);
                 // if the column pin is low, the key was pressed
                 if col.is_low() {
                     hot_pins.set_column(j, true);
