@@ -21,6 +21,9 @@ fn panic(_info: &PanicInfo) -> ! {
     }
 }
 
+/// # Safety
+///
+/// No-op personality function.
 #[lang = "eh_personality"]
 #[no_mangle]
 pub unsafe extern "C" fn rust_eh_personality() {}
