@@ -117,11 +117,7 @@ const LAYER2_KEYS: LayerKeys = [
 ];
 
 /// Collection of all the layers.
-static LAYERS: [LayerKeys; 3] = [
-    LAYER0_KEYS,
-    LAYER1_KEYS,
-    LAYER2_KEYS,
-];
+static LAYERS: [LayerKeys; 3] = [LAYER0_KEYS, LAYER1_KEYS, LAYER2_KEYS];
 
 /// Currently active layer.
 static ACTIVE_LAYER: AtomicU8 = AtomicU8::new(0);

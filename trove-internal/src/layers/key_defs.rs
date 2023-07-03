@@ -65,6 +65,7 @@ pub const L_PAREN: u8 = KB::Keyboard9OpenParens as u8 | SHIFTED;
 pub const R_PAREN: u8 = KB::Keyboard0CloseParens as u8 | SHIFTED;
 pub const L_BRACE: u8 = KB::KeyboardOpenBracketBrace as u8 | SHIFTED;
 pub const R_BRACE: u8 = KB::KeyboardCloseBracketBrace as u8 | SHIFTED;
+pub const PLUS: u8 = KB::KeyboardEqualPlus as u8 | SHIFTED;
 
 pub const R_ARROW: u8 = KB::KeyboardRightArrow as u8;
 pub const L_ARROW: u8 = KB::KeyboardLeftArrow as u8;
@@ -86,9 +87,7 @@ pub const SEVEN: u8 = KB::Keyboard7Ampersand as u8;
 pub const EIGHT: u8 = KB::Keyboard8Asterisk as u8;
 pub const NINE: u8 = KB::Keyboard9OpenParens as u8;
 pub const ZERO: u8 = KB::Keyboard0CloseParens as u8;
-pub const PAD_DOT: u8 = KB::KeypadPeriodDelete as u8;
-pub const PLUS: u8 = KB::KeypadPlus as u8;
-pub const EQUAL: u8 = KB::KeypadEqual as u8;
+pub const EQUAL: u8 = KB::KeyboardEqualPlus as u8;
 
 pub const HOME: u8 = KB::KeyboardHome as u8;
 pub const END: u8 = KB::KeyboardEnd as u8;
@@ -96,21 +95,21 @@ pub const PRT_SC: u8 = KB::KeyboardPrintScreen as u8;
 pub const SCR_LK: u8 = KB::KeyboardScrollLock as u8;
 pub const PLAY_PS: u8 = MD::PlayPause as u8;
 
-pub const VOL_UP: u8 = KB::KeyboardVolumeUp as u8; 
-pub const VOL_DN: u8 = KB::KeyboardVolumeDown as u8; 
+pub const VOL_UP: u8 = KB::KeyboardVolumeUp as u8;
+pub const VOL_DN: u8 = KB::KeyboardVolumeDown as u8;
 
-pub const F1: u8 = KB::KeyboardF1 as u8; 
-pub const F2: u8 = KB::KeyboardF2 as u8; 
-pub const F3: u8 = KB::KeyboardF3 as u8; 
-pub const F4: u8 = KB::KeyboardF4 as u8; 
-pub const F5: u8 = KB::KeyboardF5 as u8; 
-pub const F6: u8 = KB::KeyboardF6 as u8; 
-pub const F7: u8 = KB::KeyboardF7 as u8; 
-pub const F8: u8 = KB::KeyboardF8 as u8; 
-pub const F9: u8 = KB::KeyboardF9 as u8; 
-pub const F10: u8 = KB::KeyboardF10 as u8; 
-pub const F11: u8 = KB::KeyboardF11 as u8; 
-pub const F12: u8 = KB::KeyboardF12 as u8; 
+pub const F1: u8 = KB::KeyboardF1 as u8;
+pub const F2: u8 = KB::KeyboardF2 as u8;
+pub const F3: u8 = KB::KeyboardF3 as u8;
+pub const F4: u8 = KB::KeyboardF4 as u8;
+pub const F5: u8 = KB::KeyboardF5 as u8;
+pub const F6: u8 = KB::KeyboardF6 as u8;
+pub const F7: u8 = KB::KeyboardF7 as u8;
+pub const F8: u8 = KB::KeyboardF8 as u8;
+pub const F9: u8 = KB::KeyboardF9 as u8;
+pub const F10: u8 = KB::KeyboardF10 as u8;
+pub const F11: u8 = KB::KeyboardF11 as u8;
+pub const F12: u8 = KB::KeyboardF12 as u8;
 
 pub const FUN: u8 = SC::SystemFunctionShift as u8;
 pub const UPPER: u8 = 0xfe;
@@ -134,7 +133,8 @@ pub fn key_is_trans(key: u8) -> bool {
 /// Gets whether the key is shifted.
 pub fn key_is_shifted(key: u8) -> bool {
     match key {
-        L_BRACE | R_BRACE | EXCL | AT | HASH | DOLLAR | MOD | CARET | AMP | STAR | L_PAREN | R_PAREN => true,
+        L_BRACE | R_BRACE | EXCL | AT | HASH | DOLLAR | MOD | CARET | AMP | STAR | L_PAREN
+        | R_PAREN | PLUS => true,
         _ => false,
     }
 }
