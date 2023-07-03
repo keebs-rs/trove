@@ -12,18 +12,12 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  QuickFormat:
-    runs-on: ubuntu-latest
-    steps:
-      - name: git-checkout-action
-        uses: actions/checkout@v3
-      - name: dprint-check-action
-        uses: dprint/check@v2.2
-
   cargo-fmt-clippy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: 'Install linter components'
+        run: rustup component add clippy && rustup component add rustfmt
       - name: 'clippy linter'
         run: cargo clippy --release && cd trove-internal && cargo +stable clippy --target x86_64-unknown-linux-gnu
       - name: 'Check formatting'
@@ -41,6 +35,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: 'Install Dependencies'
-        run: sudo apt-get update
+        run: sudo apt-get update && sudo apt install avr-libc gcc llvm-dev
       - name: 'Build firmware'
         run: cargo build --release
