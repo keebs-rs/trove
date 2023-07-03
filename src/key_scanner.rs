@@ -3,6 +3,7 @@
 //! Types and functionality for scanning the key matrix, and debouncing key activation state.
 
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
+use core::sync::atomic::{AtomicBool, Ordering};
 
 use avr_device::asm;
 use usbd_hid::descriptor::KeyboardReport;
@@ -19,6 +20,18 @@ pub const BLANK_REPORT: KeyboardReport = KeyboardReport {
     leds: 0,
     keycodes: [0; 6],
 };
+
+static DO_SCAN: AtomicBool = AtomicBool::new(false);
+
+/// Gets whether to do a key matrix scan.
+pub fn do_scan() -> bool {
+    DO_SCAN.load(Ordering::Relaxed)
+}
+
+/// Sets whether to do a key matrix scan.
+pub fn set_do_scan(val: bool) {
+    DO_SCAN.store(val, Ordering::SeqCst);
+}
 
 bitfield! {
     /// Activated status for a row of keys.
@@ -479,12 +492,9 @@ impl KeyScanner {
 
     /// Perform a debounced [KeyMatrix] scan, and return any [KeyboardReport]s.
     pub fn scan<const N: usize>(&mut self) -> [KeyboardReport; N] {
-        let do_scan = self.do_scan;
-        if do_scan {
+        if do_scan() {
             self.read_matrix();
-            // FIXME: the original algorithm toggles this flag using the timer,
-            // but we simply call `scan_matrix`. TBD if we can just remove this flag.
-            self.do_scan = false;
+            set_do_scan(false);
         }
 
         self.matrix_scan_reports::<N>()

@@ -5,14 +5,18 @@
 #[macro_use(bitfield)]
 extern crate bitfield;
 
+use core::cell::RefCell;
+
+use avr_device::interrupt::Mutex;
+
 pub use trove_internal::layers;
 
-mod key_matrix;
-mod key_scanner;
-mod lock;
-mod setup;
-mod std_stub;
-mod usb_context;
+pub mod key_matrix;
+pub mod key_scanner;
+pub mod lock;
+pub mod setup;
+pub mod std_stub;
+pub mod usb_context;
 
 pub use key_matrix::*;
 pub use key_scanner::*;
@@ -24,4 +28,4 @@ pub use usb_context::*;
 pub const F_CPU: u32 = 16_000_000;
 
 /// Global USB context for scanning the key matrix, and handling device-host communication.
-pub static mut USB_CTX: Option<UsbContext> = None;
+pub static USB_CTX: Mutex<RefCell<Option<UsbContext>>> = Mutex::new(RefCell::new(None));

@@ -38,6 +38,7 @@ fn main() -> ! {
 
     trove::setup_timer(dp.TC1, 1500);
 
+    // Safety: mutable static is initialized exactly once, and only borrowed as a shared reference.
     let usb_bus = unsafe {
         static mut USB_BUS: Option<UsbBusAllocator<UsbBus>> = None;
         &*USB_BUS.insert(UsbBus::new(usb))
@@ -57,9 +58,9 @@ fn main() -> ! {
         key_scanner,
     };
 
-    unsafe {
-        trove::USB_CTX.replace(usb_ctx);
-    }
+    interrupt::free(|cs| {
+        trove::USB_CTX.borrow(cs).borrow_mut().replace(usb_ctx);
+    });
 
     unsafe { interrupt::enable() };
 
@@ -80,17 +81,13 @@ fn USB_COM() {
 
 #[interrupt(atmega32u4)]
 fn TIMER1_OVF() {
-    set_scan_matrix();
+    trove::key_scanner::set_do_scan(true);
 }
 
 fn scan_matrix() {
-    let ctx = unsafe { trove::USB_CTX.as_mut().unwrap() };
-
-    ctx.scan_matrix();
-}
-
-fn set_scan_matrix() {
-    let ctx = unsafe { trove::USB_CTX.as_mut().unwrap() };
-
-    ctx.key_scanner.set_do_scan(true);
+    interrupt::free(|cs| {
+        if let Some(ctx) = trove::USB_CTX.borrow(cs).borrow_mut().as_mut() {
+            ctx.scan_matrix();
+        }
+    });
 }
