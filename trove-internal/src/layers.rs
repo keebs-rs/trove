@@ -116,8 +116,18 @@ const LAYER2_KEYS: LayerKeys = [
     [ UPPER, VOL_DN, TRANS, TRANS, TRANS, TRANS, TRANS,  TRANS,  FUN, PRT_SC, SCR_LK, PLAY_PS ],
 ];
 
+/// Total number of layers.
+pub const NUM_LAYERS: usize = 3;
+
+#[cfg(target_arch = "avr")]
+avr_progmem::progmem! {
+    /// Collection of all the layers.
+    static progmem LAYERS: [LayerKeys; NUM_LAYERS] = [LAYER0_KEYS, LAYER1_KEYS, LAYER2_KEYS];
+}
+
 /// Collection of all the layers.
-static LAYERS: [LayerKeys; 3] = [LAYER0_KEYS, LAYER1_KEYS, LAYER2_KEYS];
+#[cfg(not(target_arch = "avr"))]
+static LAYERS: [LayerKeys; NUM_LAYERS] = [LAYER0_KEYS, LAYER1_KEYS, LAYER2_KEYS];
 
 /// Currently active layer.
 static ACTIVE_LAYER: AtomicU8 = AtomicU8::new(0);
@@ -133,7 +143,12 @@ pub fn layer_key(layer: usize, index: usize) -> u8 {
     // regardless of the row (since they are multiples of 12), this should give the column
     let col = index % 12;
 
-    LAYERS[layer % LAYERS.len()][row][col]
+    #[cfg(target_arch = "avr")]
+    let key_layer = LAYERS.load_at(layer & NUM_LAYERS);
+    #[cfg(not(target_arch = "avr"))]
+    let key_layer = LAYERS[layer % NUM_LAYERS];
+
+    key_layer[row][col]
 }
 
 /// Gets the key for a given `layer` and `index`, with pass-through for any transparent keys.
