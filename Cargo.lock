@@ -91,6 +91,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "avr-progmem"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4026b5cfd2368953bed46ffaa1acc7e4ea398bb7a610743d11895a5187498076"
+dependencies = [
+ "cfg-if 1.0.0",
+ "derivative",
+ "ufmt",
+]
+
+[[package]]
 name = "bare-metal"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -119,6 +130,17 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "derivative"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcc3dd5e9e9c0b295d6e1e4d811fb6f157d5ffd784b8d202fc62eac8035a770b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "embedded-hal"
@@ -285,6 +307,7 @@ dependencies = [
 name = "trove-internal"
 version = "0.1.0"
 dependencies = [
+ "avr-progmem",
  "usbd-hid",
 ]
 
